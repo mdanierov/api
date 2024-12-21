@@ -1,0 +1,28 @@
+{
+  "name": "mdanierov/api",
+  "version": "1.0.0",
+  "description": "A brief description of your project",
+  "type": "project",
+  "authors": [
+    {
+      "name": "Mirzorasul Danierov",
+      "email": "dmirzorasul@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "symfony/http-foundation": "^v7.2.0",
+    "symfony/validator": "^v7.2.0",
+    "symfony/framework-bundle": "^v7.2.0",
+    "doctrine/dbal": "^3.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "DMirzorasul\\Api\\": "src/"
+    }
+  },
+  "config": {
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "stable"
+}
