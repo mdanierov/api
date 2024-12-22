@@ -5,13 +5,11 @@ namespace DMirzorasul\Api;
 use DI\Container;
 use DI\ContainerBuilder;
 use DMirzorasul\Api\Routing\Routing;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception;
+use ReflectionMethod;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Validator\Validation;
 
 readonly class App
 {
@@ -28,11 +26,12 @@ readonly class App
      */
     public function run(?Request $request = null): void
     {
-        $this->setup();
 
         if (null === $request) {
             $request = Request::createFromGlobals();
         }
+
+        $this->setup($request);
 
         $response = $this->handle($request);
         $response->send();
@@ -41,16 +40,18 @@ readonly class App
     /**
      * @throws \Exception
      */
-    private function setup(): void
+    private function setup(Request $request): void
     {
         $builder = new ContainerBuilder();
         $builder->addDefinitions(__DIR__ . '/../config/di.php');
 
         $this->container = $builder->build();
+        $this->container->set(Request::class, $request);
     }
 
     /**
      * @throws Exception
+     * @throws \ReflectionException
      */
     private function handle(?Request $request): Response
     {
@@ -59,16 +60,23 @@ readonly class App
 
         $matchedControllerInfo = $this->routing->getMatchedController($method, $path);
         if ($matchedControllerInfo) {
-            $controllerClass  = $matchedControllerInfo['class'];
+            $controllerClass = $matchedControllerInfo['class'];
             $controllerMethod = $matchedControllerInfo['method'];
 
-            // Controller dynamisch erstellen
             if (class_exists($controllerClass) && method_exists($controllerClass, $controllerMethod)) {
                 $controller = $this->container->get($controllerClass);
-                return call_user_func([ $controller, $controllerMethod ], $request);
+
+                $reflection = new ReflectionMethod($controller, $controllerMethod);
+
+                $params = array_map(
+                    fn(\ReflectionParameter $parameter) => $this->container->get($parameter->getType()?->getName()),
+                    $reflection->getParameters()
+                );
+
+                return $reflection->invokeArgs($controller, $params);
             }
         }
 
-        return new JsonResponse('no found', 404);
+        return new JsonResponse('not found', 404);
     }
 }

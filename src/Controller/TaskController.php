@@ -18,7 +18,7 @@ class TaskController extends Controller
     {
         $tasks = $this->connection->fetchAllAssociative('SELECT * FROM `tasks`');
 
-        return $this->responseJson($tasks);
+        return new JsonResponse($tasks);
     }
 
     /**

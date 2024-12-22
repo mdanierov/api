@@ -14,9 +14,4 @@ abstract class Controller
         protected readonly ValidatorInterface $validator
     ) {
     }
-
-    protected function responseJson(mixed $data, int $status = Response::HTTP_OK): Response
-    {
-        return new JsonResponse($data, $status);
-    }
 }
