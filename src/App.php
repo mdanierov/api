@@ -2,6 +2,8 @@
 
 namespace DMirzorasul\Api;
 
+use DI\Container;
+use DI\ContainerBuilder;
 use DMirzorasul\Api\Routing\Routing;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -13,6 +15,8 @@ use Symfony\Component\Validator\Validation;
 
 readonly class App
 {
+    private ?Container $container;
+
     public function __construct(
         private Routing $routing,
     ) {
@@ -20,15 +24,29 @@ readonly class App
 
     /**
      * @throws Exception
+     * @throws \Exception
      */
     public function run(?Request $request = null): void
     {
+        $this->setup();
+
         if (null === $request) {
             $request = Request::createFromGlobals();
         }
 
         $response = $this->handle($request);
         $response->send();
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function setup(): void
+    {
+        $builder = new ContainerBuilder();
+        $builder->addDefinitions(__DIR__ . '/../config/di.php');
+
+        $this->container = $builder->build();
     }
 
     /**
@@ -46,45 +64,11 @@ readonly class App
 
             // Controller dynamisch erstellen
             if (class_exists($controllerClass) && method_exists($controllerClass, $controllerMethod)) {
-                $controller = new $controllerClass($this->getConnection(), Validation::createValidator());
-
+                $controller = $this->container->get($controllerClass);
                 return call_user_func([ $controller, $controllerMethod ], $request);
             }
         }
 
         return new JsonResponse('no found', 404);
-    }
-
-    /**
-     * @throws Exception
-     * @throws \Exception
-     */
-    private function getConnection(): Connection
-    {
-        $connection = DriverManager::getConnection([
-            'path'   => __DIR__ . '/../database.sqlite', // Path to the SQLite database file
-            'driver' => 'pdo_sqlite',
-        ]);
-
-        if (!file_exists(__DIR__ . '/../database.sqlite')) {
-                throw new \Exception('Database not found');
-        }
-
-        $this->createTables($connection);
-
-        return $connection;
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function createTables(Connection $conn): void
-    {
-        $sql = "CREATE TABLE IF NOT EXISTS tasks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT NOT NULL
-                )";
-
-        $conn->executeStatement($sql);
     }
 }
