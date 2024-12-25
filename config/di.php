@@ -1,7 +1,10 @@
 <?php
 
+use DMirzorasul\Api\Validations\Request;
+use DMirzorasul\Api\Validations\Task\TaskCreateRequest;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -13,7 +16,7 @@ return [
         ]);
 
         if (!file_exists(__DIR__ . '/../database.sqlite')) {
-            throw new \Exception('Database not found');
+            throw new Exception('Database not found');
         }
 
         // TODO: Implement via migrations
@@ -29,5 +32,11 @@ return [
 
     ValidatorInterface::class => function () {
         return Validation::createValidator();
+    },
+
+    SymfonyRequest::class => SymfonyRequest::createFromGlobals(),
+
+    TaskCreateRequest::class => function () {
+        return TaskCreateRequest::createFromGlobals();
     },
 ];

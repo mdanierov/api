@@ -5,6 +5,7 @@ namespace DMirzorasul\Api;
 use DI\Container;
 use DI\ContainerBuilder;
 use DMirzorasul\Api\Routing\Routing;
+use DMirzorasul\Api\Validations\Request as ValidationRequest;
 use Doctrine\DBAL\Exception;
 use ReflectionMethod;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,7 +27,6 @@ readonly class App
      */
     public function run(?Request $request = null): void
     {
-
         if (null === $request) {
             $request = Request::createFromGlobals();
         }
@@ -60,7 +60,7 @@ readonly class App
 
         $matchedControllerInfo = $this->routing->getMatchedController($method, $path);
         if ($matchedControllerInfo) {
-            $controllerClass = $matchedControllerInfo['class'];
+            $controllerClass  = $matchedControllerInfo['class'];
             $controllerMethod = $matchedControllerInfo['method'];
 
             if (class_exists($controllerClass) && method_exists($controllerClass, $controllerMethod)) {
@@ -72,6 +72,16 @@ readonly class App
                     fn(\ReflectionParameter $parameter) => $this->container->get($parameter->getType()?->getName()),
                     $reflection->getParameters()
                 );
+
+                foreach ($params as $param) {
+                    if ($param instanceof ValidationRequest) {
+                        try {
+                            $param->validate();
+                        } catch (\Exception $exception) {
+                            dd($exception);
+                        }
+                    }
+                }
 
                 return $reflection->invokeArgs($controller, $params);
             }

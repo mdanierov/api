@@ -2,6 +2,7 @@
 
 namespace DMirzorasul\Api\Controller;
 
+use DMirzorasul\Api\Validations\Task\TaskCreateRequest;
 use Doctrine\DBAL\Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,10 +25,9 @@ class TaskController extends Controller
     /**
      * @throws Exception
      */
-    public function store(Request $request): JsonResponse
+    public function store(TaskCreateRequest $request): JsonResponse
     {
-
-        $title = $request->request->get('title');
+        $title = $request->title;
 
         $violations = $this->validator->validate($title, [
             new NotBlank(),
