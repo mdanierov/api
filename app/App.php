@@ -3,9 +3,7 @@
 namespace DMirzorasul\Api;
 
 use DI\Container;
-use DI\ContainerBuilder;
-use DMirzorasul\Api\Routing\Routing;
-use DMirzorasul\Api\Validations\Request as ValidationRequest;
+use DMirzorasul\Api\Routing\Route;
 use Doctrine\DBAL\Exception;
 use ReflectionMethod;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,51 +12,21 @@ use Symfony\Component\HttpFoundation\Response;
 
 readonly class App
 {
-    private ?Container $container;
-
     public function __construct(
-        private Routing $routing,
+        private ?Container $container
     ) {
-    }
-
-    /**
-     * @throws Exception
-     * @throws \Exception
-     */
-    public function run(?Request $request = null): void
-    {
-        if (null === $request) {
-            $request = Request::createFromGlobals();
-        }
-
-        $this->setup($request);
-
-        $response = $this->handle($request);
-        $response->send();
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function setup(Request $request): void
-    {
-        $builder = new ContainerBuilder();
-        $builder->addDefinitions(__DIR__ . '/../config/di.php');
-
-        $this->container = $builder->build();
-        $this->container->set(Request::class, $request);
     }
 
     /**
      * @throws Exception
      * @throws \ReflectionException
      */
-    private function handle(?Request $request): Response
+    public function handle(Request $request): Response
     {
         $method = $request->getMethod();
         $path   = $request->getPathInfo();
 
-        $matchedControllerInfo = $this->routing->getMatchedController($method, $path);
+        $matchedControllerInfo = Route::getMatchedController($method, $path);
         if ($matchedControllerInfo) {
             $controllerClass  = $matchedControllerInfo['class'];
             $controllerMethod = $matchedControllerInfo['method'];
@@ -72,16 +40,6 @@ readonly class App
                     fn(\ReflectionParameter $parameter) => $this->container->get($parameter->getType()?->getName()),
                     $reflection->getParameters()
                 );
-
-                foreach ($params as $param) {
-                    if ($param instanceof ValidationRequest) {
-                        try {
-                            $param->validate();
-                        } catch (\Exception $exception) {
-                            dd($exception);
-                        }
-                    }
-                }
 
                 return $reflection->invokeArgs($controller, $params);
             }
