@@ -3,9 +3,10 @@
 namespace DMirzorasul\Api;
 
 use DI\Container;
+use DI\DependencyException;
+use DI\NotFoundException;
 use DMirzorasul\Api\Routing\Route;
-use Doctrine\DBAL\Exception;
-use ReflectionMethod;
+use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,8 +19,9 @@ readonly class App
     }
 
     /**
-     * @throws Exception
+     * @throws NotFoundException
      * @throws \ReflectionException
+     * @throws DependencyException
      */
     public function handle(Request $request): Response
     {
@@ -27,24 +29,36 @@ readonly class App
         $path   = $request->getPathInfo();
 
         $matchedControllerInfo = Route::getMatchedController($method, $path);
-        if ($matchedControllerInfo) {
-            $controllerClass  = $matchedControllerInfo['class'];
-            $controllerMethod = $matchedControllerInfo['method'];
-
-            if (class_exists($controllerClass) && method_exists($controllerClass, $controllerMethod)) {
-                $controller = $this->container->get($controllerClass);
-
-                $reflection = new ReflectionMethod($controller, $controllerMethod);
-
-                $params = array_map(
-                    fn(\ReflectionParameter $parameter) => $this->container->get($parameter->getType()?->getName()),
-                    $reflection->getParameters()
-                );
-
-                return $reflection->invokeArgs($controller, $params);
-            }
+        if (!$matchedControllerInfo) {
+            // TODO: Add Exception.
+            return new JsonResponse('not found', 404);
         }
 
-        return new JsonResponse('not found', 404);
+        $controllerClass  = $matchedControllerInfo['class'];
+        $controllerMethod = $matchedControllerInfo['method'];
+
+        if (!class_exists($controllerClass)) {
+            // TODO: Add Exception
+        }
+
+        if (!method_exists($controllerClass, $controllerMethod)) {
+            // TODO: Add Exception
+        }
+
+        try {
+            $controller = $this->container->get($controllerClass);
+        } catch (Exception $exception) {
+            // TODO: Add Exception.
+            dd($exception);
+        }
+
+        try {
+            $response = $this->container->call([ $controller, $controllerMethod ]);
+        } catch (Exception $exception) {
+            // TODO: Add Exception.
+            dd($exception);
+        }
+
+        return $response;
     }
 }

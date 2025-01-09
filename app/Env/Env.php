@@ -23,11 +23,13 @@ class Env
     public function load(): void
     {
         if (!is_readable($this->path) || is_dir($this->path)) {
+            // TODO: Add Exception
             throw new \Exception('Path is wrong!!!  --- ' . $this->path);
         }
 
         $data = file_get_contents($this->path);
         if (str_starts_with($data, "\xEF\xBB\xBF")) {
+            // TODO: Add Exception
             throw new \Exception('Loading files starting with a byte-order-mark (BOM) is not supported.');
         }
 
@@ -40,6 +42,7 @@ class Env
 
         while ($cursor < $end) {
             if (!preg_match('/(export[ \t]++)?(' . self::VAR_NAME_REGEX . ')/A', $data, $matches, 0, $cursor)) {
+                // TODO: Add Exception
                 throw new \Exception('Invalid character in variable name');
             }
 
@@ -47,17 +50,21 @@ class Env
 
             if ($cursor === $end || "\n" === $data[$cursor] || '#' === $data[$cursor]) {
                 if ($matches[1]) {
+                    // TODO: Add Exception
                     throw new \Exception('Unable to unset an environment variable');
                 }
 
+                // TODO: Add Exception
                 throw new \Exception('Missing = in the environment variable declaration');
             }
 
             if (' ' === $data[$cursor] || "\t" === $data[$cursor]) {
+                // TODO: Add Exception
                 throw new \Exception('Whitespace characters are not supported after the variable name');
             }
 
             if ('=' !== $data[$cursor]) {
+                // TODO: Add Exception
                 throw new \Exception('Missing = in the environment variable declaration');
             }
 
@@ -89,6 +96,7 @@ class Env
     {
         $value = $this->get($name);
         if (!is_string($value)) {
+            // TODO: Add Exception
             throw new \Exception("$name is not found or not string");
         }
 

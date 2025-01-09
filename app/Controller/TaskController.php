@@ -4,6 +4,7 @@ namespace DMirzorasul\Api\Controller;
 
 use DMirzorasul\Api\Validations\Tasks\CreateTaskValidator;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,6 +15,9 @@ class TaskController
     ) {
     }
 
+    /**
+     * @throws Exception
+     */
     public function index(): Response
     {
         $tasks = $this->connection->fetchAllAssociative('SELECT * FROM `tasks`');
@@ -23,8 +27,6 @@ class TaskController
 
     public function store(CreateTaskValidator $validator): Response
     {
-        dd($validator);
-
-        return new JsonResponse();
+        return new JsonResponse($validator->validated());
     }
 }
