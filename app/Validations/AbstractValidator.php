@@ -8,23 +8,42 @@ use Symfony\Component\Validator\Validation;
 
 abstract class AbstractValidator extends Request
 {
+    private bool $isValidated = false;
+
     /**
      * @throws \Exception
      */
-    public function validate(): array
+    public function validate(): void
     {
         $violations = [];
         $validator  = Validation::createValidator();
 
         foreach ($this->rules() as $field => $validations) {
-            $violations[$field] = $validator->validate($this->$field, $validations);
+            $errors = $validator->validate($this->$field, $validations);
+            if ($errors->count() > 0) {
+                $violations[$field] = $errors;
+            }
         }
 
         if (count($violations) > 0) {
             throw new ValidationException($violations);
         }
 
-        return $violations;
+        $this->isValidated = true;
+    }
+
+    public function validated(): array
+    {
+        if (!$this->isValidated) {
+            return [];
+        }
+
+        $values = [];
+        foreach ($this->rules() as $field => $validations) {
+            $values[$field] = $this->$field;
+        }
+
+        return $values;
     }
 
     public static function createFromGlobals(): static

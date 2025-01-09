@@ -4,9 +4,9 @@ namespace DMirzorasul\Api\Exceptions;
 
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Throwable;
 
 class ValidationException extends Exception
 {
@@ -24,9 +24,13 @@ class ValidationException extends Exception
     public function getErrors(): array
     {
         $errors = [];
-        /** @var ConstraintViolationListInterface $value*/
+        /** @var ConstraintViolationListInterface $value */
         foreach ($this->violations as $key => $list) {
-            $errors[$key] = array_map(fn(ConstraintViolationInterface $value) => $value->getMessage(), iterator_to_array($list));
+            $errors[$key] =
+                array_map(
+                    fn(ConstraintViolationInterface $value) => $value->getMessage(),
+                    iterator_to_array($list)
+                );
         }
 
         return $errors;

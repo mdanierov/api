@@ -12,7 +12,6 @@ $container = require dirname(__DIR__) . '/config/bootstrap.php';
 
 /** @var App $app */
 $app = $container->get(App::class);
-
 try {
     /** @var \Symfony\Component\HttpFoundation\Response $response */
     $response = $container->call([ $app, 'handle' ]);

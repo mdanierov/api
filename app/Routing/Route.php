@@ -4,7 +4,7 @@ namespace DMirzorasul\Api\Routing;
 
 class Route
 {
-    public static array $routes = [];
+    private static array $routes = [];
 
     public static function get(string $pattern, string $class, string $method): void
     {
@@ -35,6 +35,7 @@ class Route
 
     public static function getMatchedController(string $method, string $path): ?array
     {
+        // TODO: Add Exception if the endpoint exists but METHOD was not right.
         if (!isset(self::$routes[$method][$path])) {
             return null;
         }
