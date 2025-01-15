@@ -5,7 +5,6 @@ use DMirzorasul\Api\App;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../config/routes.php';
 
 /** @var Container $container */
 $container = require dirname(__DIR__) . '/config/bootstrap.php';

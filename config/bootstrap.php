@@ -2,6 +2,8 @@
 
 use DI\ContainerBuilder;
 
+require __DIR__ . '/routes.php';
+
 $definitions = require dirname(__DIR__) . '/app/DependencyInjection/loader.php';
 $definitions = array_merge(...array_merge(...$definitions));
 
